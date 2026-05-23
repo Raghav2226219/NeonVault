@@ -1,0 +1,403 @@
+// ═══════════════════════════════════════════════════════════════════════════
+//  NeonVault — Prisma Schema
+//  Database: Neon (PostgreSQL)
+// ═══════════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  ENUMS
+// ───────────────────────────────────────────────────────────────────────────
+
+enum MediaType {
+  ANIME
+  MANGA
+  MANHWA
+  MANHUA
+  MOVIE
+  SERIES
+  LIGHT_NOVEL
+}
+
+enum WatchStatus {
+  WATCHING
+  READING
+  COMPLETED
+  ON_HOLD
+  DROPPED
+  PLANNED
+}
+
+enum NotificationType {
+  NEW_SEASON
+  NEW_EPISODE
+  NEW_CHAPTER
+  FOLLOW
+  LIKE
+  COMMENT
+  REVIEW
+  SYSTEM
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  USER
+// ───────────────────────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  username       String   @unique
+  password       String
+  avatar         String?
+  bio            String?
+  isPublic       Boolean  @default(true)
+  isVerified     Boolean  @default(false)
+  refreshToken   String?
+  resetOtp       String?
+  resetOtpExpiry DateTime?
+  emailOtp       String?
+  emailOtpExpiry DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Preferences (stored as JSON)
+  scoreFormat    String   @default("POINT_10")   // POINT_10 | STAR_5 | PERCENT
+  titleLanguage  String   @default("ENGLISH")    // ENGLISH | ROMAJI | NATIVE
+  themeAccent    String   @default("#00f5ff")
+  timezone       String   @default("UTC")
+
+  // Relations
+  library        LibraryEntry[]
+  vaultEntries   VaultEntry[]
+  vaultAuth      VaultAuth?
+  vaultSessions  VaultSession[]
+  biometricQrs   BiometricQR[]
+  customLists    CustomList[]
+  reviews        Review[]
+  comments       Comment[]
+  followers      Follow[]        @relation("Following")
+  following      Follow[]        @relation("Follower")
+  notifications  Notification[]
+  activity       ActivityLog[]
+  watchedEps     WatchedEpisode[]
+  likes          Like[]
+
+  @@index([email])
+  @@index([username])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  LIBRARY
+// ───────────────────────────────────────────────────────────────────────────
+
+model LibraryEntry {
+  id               String      @id @default(cuid())
+  userId           String
+  mediaId          String      // External ID from Jikan / TMDB / ComicK
+  mediaType        MediaType
+  status           WatchStatus @default(PLANNED)
+
+  // Progress
+  currentEpisode   Int         @default(0)
+  totalEpisodes    Int?
+  currentChapter   Int         @default(0)
+  totalChapters    Int?
+  currentVolume    Int         @default(0)
+  totalVolumes     Int?
+
+  // Metadata
+  score            Float?      // 0.0 – 10.0
+  notes            String?
+  isFavourite      Boolean     @default(false)
+  rewatchCount     Int         @default(0)
+  startDate        DateTime?
+  finishDate       DateTime?
+
+  // Cached media info (to avoid hitting external APIs on every render)
+  mediaTitle       String?
+  mediaCover       String?
+  mediaYear        Int?
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mediaId, mediaType])
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, mediaType])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  PRIVATE VAULT — LIBRARY
+// ───────────────────────────────────────────────────────────────────────────
+
+model VaultEntry {
+  id               String      @id @default(cuid())
+  userId           String
+  mediaId          String
+  mediaType        MediaType
+  status           WatchStatus @default(PLANNED)
+
+  currentEpisode   Int         @default(0)
+  totalEpisodes    Int?
+  currentChapter   Int         @default(0)
+  totalChapters    Int?
+  currentVolume    Int         @default(0)
+  totalVolumes     Int?
+
+  score            Float?
+  notes            String?
+  rewatchCount     Int         @default(0)
+  startDate        DateTime?
+  finishDate       DateTime?
+
+  mediaTitle       String?
+  mediaCover       String?
+  mediaYear        Int?
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mediaId, mediaType])
+  @@index([userId])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  PRIVATE VAULT — AUTH
+// ───────────────────────────────────────────────────────────────────────────
+
+model VaultAuth {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  pinHash           String?   // bcrypt hash of 6-digit vault PIN
+  otpSecret         String?   // TOTP secret for vault OTP (separate from account OTP)
+  biometricEnabled  Boolean   @default(false)
+
+  // Lockout
+  failedAttempts    Int       @default(0)
+  lockedUntil       DateTime?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Active vault sessions (created on successful unlock, destroyed on lock)
+model VaultSession {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique @default(uuid())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+// Short-lived QR codes for biometric bridge (desktop → mobile → fingerprint)
+model BiometricQR {
+  id        String   @id @default(cuid())
+  userId    String
+  qrToken   String   @unique @default(uuid())
+  status    String   @default("PENDING") // PENDING | SUCCESS | FAILED | EXPIRED
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([qrToken])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  EPISODE / CHAPTER TRACKING  (for Timeline)
+// ───────────────────────────────────────────────────────────────────────────
+
+model WatchedEpisode {
+  id        String    @id @default(cuid())
+  userId    String
+  mediaId   String
+  mediaType MediaType
+  season    Int?      // for series/anime with seasons
+  episode   Float?    // float to support ep 12.5 specials
+  chapter   Float?    // for manga/manhwa
+  volume    Int?
+  isVault   Boolean   @default(false)  // true if this belongs to vault timeline
+  watchedAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mediaId, mediaType, season, episode, chapter])
+  @@index([userId, mediaId, mediaType])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  CUSTOM LISTS
+// ───────────────────────────────────────────────────────────────────────────
+
+model CustomList {
+  id          String           @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isPublic    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       CustomListItem[]
+
+  @@index([userId])
+}
+
+model CustomListItem {
+  id         String     @id @default(cuid())
+  listId     String
+  mediaId    String
+  mediaType  MediaType
+  mediaTitle String?
+  mediaCover String?
+  addedAt    DateTime   @default(now())
+
+  list       CustomList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, mediaId, mediaType])
+  @@index([listId])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  REVIEWS
+// ───────────────────────────────────────────────────────────────────────────
+
+model Review {
+  id         String    @id @default(cuid())
+  userId     String
+  mediaId    String
+  mediaType  MediaType
+  content    String
+  score      Float?    // 0.0 – 10.0
+  hasSpoiler Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes      Like[]
+
+  @@unique([userId, mediaId, mediaType])
+  @@index([mediaId, mediaType])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  COMMENTS
+// ───────────────────────────────────────────────────────────────────────────
+
+model Comment {
+  id         String    @id @default(cuid())
+  userId     String
+  mediaId    String
+  mediaType  MediaType
+  content    String
+  hasSpoiler Boolean   @default(false)
+  parentId   String?   // for threaded replies
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes      Like[]
+
+  @@index([mediaId, mediaType])
+  @@index([parentId])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  LIKES  (polymorphic — can like a review or comment)
+// ───────────────────────────────────────────────────────────────────────────
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  reviewId  String?
+  commentId String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review    Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reviewId])
+  @@unique([userId, commentId])
+  @@index([userId])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  FOLLOWS
+// ───────────────────────────────────────────────────────────────────────────
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   // the person who clicked "follow"
+  followingId String   // the person being followed
+  createdAt   DateTime @default(now())
+
+  follower    User     @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  NOTIFICATIONS
+// ───────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?          // deep-link to the relevant page
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId])
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+//  ACTIVITY LOG  (powers the activity feed on profiles)
+// ───────────────────────────────────────────────────────────────────────────
+
+model ActivityLog {
+  id          String    @id @default(cuid())
+  userId      String
+  action      String    // e.g. "COMPLETED", "STARTED", "RATED", "REVIEWED", "ADDED_TO_LIST"
+  mediaId     String?
+  mediaType   MediaType?
+  mediaTitle  String?
+  mediaCover  String?
+  detail      String?   // e.g. "gave 8.5/10" or "added to Best Isekai"
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+}

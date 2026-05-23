@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NeonVault — CSS Design Tokens & Variables
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Brand Colors ──────────────────────────────────────────────────────── */
+  --neon-cyan:        #00f5ff;
+  --neon-purple:      #bf00ff;
+  --neon-pink:        #ff00aa;
+  --neon-green:       #00ff88;
+  --neon-orange:      #ff6b00;
+
+  /* ── Backgrounds ───────────────────────────────────────────────────────── */
+  --bg-base:          #0a0a0f;
+  --bg-surface:       #111118;
+  --bg-elevated:      #1a1a26;
+  --bg-overlay:       #22223a;
+  --bg-card:          #13131f;
+
+  /* ── Borders ────────────────────────────────────────────────────────────── */
+  --border-subtle:    rgba(255, 255, 255, 0.06);
+  --border-default:   rgba(255, 255, 255, 0.10);
+  --border-strong:    rgba(255, 255, 255, 0.18);
+  --border-neon:      rgba(0, 245, 255, 0.35);
+
+  /* ── Text ───────────────────────────────────────────────────────────────── */
+  --text-primary:     #f0f0ff;
+  --text-secondary:   #9999bb;
+  --text-muted:       #55556a;
+  --text-disabled:    #33334a;
+
+  /* ── Status Colors ──────────────────────────────────────────────────────── */
+  --status-watching:  #00f5ff;
+  --status-completed: #00ff88;
+  --status-onhold:    --neon-orange;
+  --status-dropped:   #ff4466;
+  --status-planned:   #9999bb;
+
+  /* ── Gradients ──────────────────────────────────────────────────────────── */
+  --gradient-brand:   linear-gradient(135deg, #00f5ff 0%, #bf00ff 100%);
+  --gradient-pink:    linear-gradient(135deg, #ff00aa 0%, #bf00ff 100%);
+  --gradient-card:    linear-gradient(145deg, #1a1a26 0%, #111118 100%);
+  --gradient-hero:    radial-gradient(ellipse at 60% 0%, rgba(0,245,255,0.12) 0%, transparent 60%),
+                      radial-gradient(ellipse at 20% 80%, rgba(191,0,255,0.10) 0%, transparent 50%),
+                      #0a0a0f;
+
+  /* ── Shadows & Glows ────────────────────────────────────────────────────── */
+  --shadow-card:      0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-elevated:  0 8px 40px rgba(0, 0, 0, 0.7);
+  --glow-cyan:        0 0 20px rgba(0, 245, 255, 0.4);
+  --glow-purple:      0 0 20px rgba(191, 0, 255, 0.4);
+  --glow-pink:        0 0 20px rgba(255, 0, 170, 0.4);
+  --glow-sm-cyan:     0 0 8px rgba(0, 245, 255, 0.5);
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-sans:        'Inter', system-ui, -apple-system, sans-serif;
+  --font-display:     'Outfit', 'Inter', sans-serif;
+  --font-mono:        'Fira Code', 'Cascadia Code', monospace;
+
+  --text-xs:    0.75rem;    /* 12px */
+  --text-sm:    0.875rem;   /* 14px */
+  --text-base:  1rem;       /* 16px */
+  --text-lg:    1.125rem;   /* 18px */
+  --text-xl:    1.25rem;    /* 20px */
+  --text-2xl:   1.5rem;     /* 24px */
+  --text-3xl:   1.875rem;   /* 30px */
+  --text-4xl:   2.25rem;    /* 36px */
+  --text-5xl:   3rem;       /* 48px */
+
+  /* ── Spacing ─────────────────────────────────────────────────────────────── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* ── Border Radius ───────────────────────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ─────────────────────────────────────────────────────────── */
+  --ease-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:     cubic-bezier(0, 0, 0.2, 1);
+  --transition:   all 0.2s var(--ease-smooth);
+  --transition-slow: all 0.4s var(--ease-smooth);
+
+  /* ── Z-Index Scale ───────────────────────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-sticky:  100;
+  --z-overlay: 200;
+  --z-modal:   300;
+  --z-toast:   400;
+
+  /* ── Layout ──────────────────────────────────────────────────────────────── */
+  --sidebar-width:     240px;
+  --navbar-height:     64px;
+  --content-max-width: 1400px;
+}

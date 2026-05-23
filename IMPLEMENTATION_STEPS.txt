@@ -1,0 +1,668 @@
+================================================================================
+  NEONVAULT — STEPWISE IMPLEMENTATION PLAN
+  Stack: Node.js + Express | React + Vite | Neon (PostgreSQL) + Prisma
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 1 — PROJECT SETUP & FOUNDATION
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 1 — Initialize Backend
+  [ ] cd backend && npm init -y
+  [ ] Install dependencies:
+        npm install express cors dotenv bcryptjs jsonwebtoken
+                    @prisma/client nodemailer express-rate-limit
+                    cookie-parser helmet morgan uuid
+  [ ] Install dev dependencies:
+        npm install -D prisma nodemon
+  [ ] Create server.js — main Express app entry point
+  [ ] Set up .env with:
+        PORT
+        DATABASE_URL           (Neon PostgreSQL connection string)
+        JWT_SECRET
+        JWT_REFRESH_SECRET
+        EMAIL_USER
+        EMAIL_PASS
+        CLIENT_URL
+        VAULT_ENCRYPTION_KEY
+  [ ] Set up .gitignore (node_modules, .env, dist)
+  [ ] Add "dev": "nodemon server.js" to package.json scripts
+
+STEP 2 — Initialize Frontend
+  [ ] cd frontend
+  [ ] npx create-vite@latest . -- --template react
+  [ ] Install dependencies:
+        npm install axios react-router-dom react-query
+                    zustand framer-motion recharts
+                    react-hot-toast qrcode.react
+  [ ] Set up .env with:
+        VITE_API_URL=http://localhost:5000/api
+        VITE_JIKAN_URL=https://api.jikan.moe/v4
+        VITE_TMDB_URL=https://api.themoviedb.org/3
+        VITE_TMDB_KEY=<your_key>
+        VITE_COMICK_URL=https://api.comick.io
+  [ ] Set up vite.config.js with proxy to backend
+  [ ] Set up .gitignore (node_modules, dist, .env)
+
+STEP 3 — Database Setup (Neon + Prisma)
+  [ ] Create a Neon project at neon.tech
+  [ ] Copy the DATABASE_URL into backend/.env
+  [ ] Run: npx prisma init (inside backend/)
+  [ ] Define Prisma schema (see STEP 3 details below)
+  [ ] Run: npx prisma migrate dev --name init
+  [ ] Run: npx prisma generate
+  [ ] Create backend/config/db.js — PrismaClient singleton
+
+  PRISMA SCHEMA MODELS:
+    • User              — id, email, username, password, avatar, bio,
+                          isPublic, createdAt, refreshToken
+    • Library           — id, userId, mediaId, mediaType, status,
+                          currentEp, currentChapter, totalEp, totalChapters,
+                          score, notes, startDate, endDate, isFavourite,
+                          rewatchCount, createdAt, updatedAt
+    • VaultEntry        — id, userId, mediaId, mediaType, status,
+                          currentEp, currentChapter, score, notes,
+                          createdAt, updatedAt
+    • VaultAuth         — id, userId, pinHash, otpSecret, biometricEnabled,
+                          failedAttempts, lockedUntil
+    • VaultSession      — id, userId, token, expiresAt, createdAt
+    • BiometricQR       — id, userId, qrToken, expiresAt, used
+    • CustomList        — id, userId, name, description, isPublic, createdAt
+    • CustomListItem    — id, listId, mediaId, mediaType
+    • Review            — id, userId, mediaId, mediaType, content,
+                          score, spoiler, createdAt
+    • Comment           — id, userId, mediaId, mediaType, content,
+                          parentId, createdAt
+    • Follow            — id, followerId, followingId, createdAt
+    • Notification      — id, userId, type, message, read, createdAt
+    • ActivityLog       — id, userId, action, mediaId, mediaType,
+                          detail, createdAt
+    • WatchedEpisode    — id, userId, mediaId, season, episode,
+                          watchedAt, isVault
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 2 — BACKEND: AUTH SYSTEM
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 4 — Config & Middleware
+  [ ] backend/config/db.js         — PrismaClient export
+  [ ] backend/config/corsOptions.js — CORS config (allow frontend origin)
+  [ ] backend/middleware/errorHandler.js  — global error handler
+  [ ] backend/middleware/rateLimiter.js   — express-rate-limit setup
+  [ ] backend/middleware/authMiddleware.js — verify JWT, attach req.user
+
+STEP 5 — Auth Routes & Controller
+  [ ] backend/utils/generateToken.js  — sign access + refresh JWT
+  [ ] backend/utils/generateOtp.js    — 6-digit OTP generator + expiry
+  [ ] backend/utils/sendEmail.js      — nodemailer email sender
+
+  [ ] authController.js:
+        register()       — hash password, create user, send verify email
+        login()          — verify credentials, return JWT + refresh token
+        logout()         — clear refresh token
+        refreshToken()   — issue new access token
+        verifyEmail()    — confirm email via OTP
+        forgotPassword() — send reset OTP
+        resetPassword()  — validate OTP, update password
+        googleOAuth()    — Google sign-in flow
+
+  [ ] authRoutes.js:
+        POST /api/auth/register
+        POST /api/auth/login
+        POST /api/auth/logout
+        POST /api/auth/refresh
+        POST /api/auth/verify-email
+        POST /api/auth/forgot-password
+        POST /api/auth/reset-password
+        GET  /api/auth/google
+
+STEP 6 — User Routes & Controller
+  [ ] userController.js:
+        getProfile()       — get user public profile
+        updateProfile()    — update bio, avatar, username
+        updateSettings()   — update preferences (theme, score format, etc.)
+        deleteAccount()    — delete user + cascade all data
+        getFollowers()     — list followers
+        getFollowing()     — list following
+        followUser()       — follow a user
+        unfollowUser()     — unfollow a user
+
+  [ ] userRoutes.js:
+        GET    /api/users/:username
+        PUT    /api/users/me
+        PUT    /api/users/me/settings
+        DELETE /api/users/me
+        GET    /api/users/:username/followers
+        GET    /api/users/:username/following
+        POST   /api/users/:username/follow
+        DELETE /api/users/:username/follow
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 3 — BACKEND: LIBRARY & MEDIA
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 7 — Library Routes & Controller
+  [ ] libraryController.js:
+        getLibrary()       — fetch user library (with filters & sort)
+        addEntry()         — add media to library
+        updateEntry()      — update status, progress, score, notes
+        deleteEntry()      — remove from library
+        getFavourites()    — get starred entries
+        bulkUpdate()       — change status for multiple entries
+
+  [ ] libraryRoutes.js:
+        GET    /api/library              (auth required)
+        POST   /api/library
+        PUT    /api/library/:id
+        DELETE /api/library/:id
+        GET    /api/library/favourites
+        PUT    /api/library/bulk
+
+STEP 8 — External API Integration (Media Data)
+  [ ] backend/utils/apiHelpers.js — fetch helpers with retry logic
+
+  External APIs to integrate:
+    ANIME & MANGA:
+      • Jikan API v4 (jikan.moe) — free, no key needed
+          Endpoints: /anime, /manga, /anime/{id}, /seasons/now
+      • AniList GraphQL API — anime + manga, no key needed
+          Used for: detailed info, airing schedule, relations
+
+    MOVIES & TV SERIES:
+      • TMDB API (themoviedb.org) — free with API key
+          Endpoints: /search/multi, /movie/{id}, /tv/{id},
+                     /trending/all/week, /genre/movie/list
+
+    MANHWA / MANHUA:
+      • ComicK API (comick.io) — free, no key
+          Endpoints: /comic, /comic/{slug}/chapters
+
+  [ ] mediaController.js:
+        searchMedia()      — search across Jikan + TMDB + ComicK
+        getMediaDetail()   — fetch full detail from the right API by type
+        getTrending()      — trending anime (Jikan) + movies (TMDB)
+        getSeasonalAnime() — Jikan /seasons/now
+        getRelated()       — fetch sequels/prequels/adaptations
+
+  [ ] mediaRoutes.js:
+        GET /api/media/search?q=&type=
+        GET /api/media/:type/:id
+        GET /api/media/trending
+        GET /api/media/seasonal
+        GET /api/media/:type/:id/related
+
+STEP 9 — Search Routes & Controller
+  [ ] searchController.js:
+        globalSearch()     — fan out to all APIs, merge & rank results
+        searchByGenre()    — filter results by genre
+        advancedSearch()   — multi-filter (type, year, status, rating)
+
+  [ ] searchRoutes.js:
+        GET /api/search?q=&type=&genre=&year=&status=
+        GET /api/search/advanced
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 4 — BACKEND: TIMELINE & SEASON CONTINUATION
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 10 — Timeline & Season Alerts
+  [ ] timelineController.js:
+        getTimeline()      — fetch WatchedEpisode records for a series,
+                             merge with API episode list, return structured
+                             timeline object (watched / aired / upcoming)
+        markEpisode()      — mark episode(s) as watched
+        getSeasonUpdates() — check library entries for new seasons using
+                             Jikan/TMDB, return list of series with updates
+        getUpcoming()      — episodes / seasons airing soon for user's library
+
+  [ ] timelineRoutes.js:
+        GET  /api/timeline/:type/:mediaId
+        POST /api/timeline/:type/:mediaId/mark
+        GET  /api/timeline/season-updates
+        GET  /api/timeline/upcoming
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 5 — BACKEND: PRIVATE VAULT
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 11 — Vault Auth & Encryption
+  [ ] backend/utils/encryptVault.js — AES-256 encryption for vault tokens
+  [ ] backend/middleware/vaultMiddleware.js — verify vault session token
+
+  [ ] vaultController.js:
+        setupVault()       — first-time vault creation, set PIN + OTP secret
+        unlockWithPin()    — verify PIN hash, create vault session
+        unlockWithOtp()    — generate + verify vault OTP
+        requestQR()        — generate single-use QR token for biometric bridge
+        verifyBiometric()  — mobile calls this after fingerprint success;
+                             signs vault session token for desktop
+        pollVaultUnlock()  — desktop polls (short-lived SSE or polling endpoint)
+                             until biometric bridge resolves
+        lockVault()        — invalidate vault session
+        getVaultLibrary()  — fetch vault entries (vault session required)
+        addVaultEntry()    — add entry to vault
+        updateVaultEntry() — update vault entry
+        deleteVaultEntry() — remove from vault
+        getVaultStats()    — vault-only stats
+        getVaultTimeline() — vault-only timeline
+        changeVaultPin()   — update PIN (vault session required)
+        resetVault()       — emergency reset via email confirmation
+
+  [ ] vaultRoutes.js:
+        POST /api/vault/setup
+        POST /api/vault/unlock/pin
+        POST /api/vault/unlock/otp
+        GET  /api/vault/unlock/qr
+        POST /api/vault/unlock/biometric
+        GET  /api/vault/unlock/poll
+        POST /api/vault/lock
+        GET  /api/vault/library
+        POST /api/vault/library
+        PUT  /api/vault/library/:id
+        DELETE /api/vault/library/:id
+        GET  /api/vault/stats
+        GET  /api/vault/timeline/:type/:mediaId
+        PUT  /api/vault/pin
+        POST /api/vault/reset
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 6 — BACKEND: STATS, SOCIAL & NOTIFICATIONS
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 12 — Stats
+  [ ] statsController.js:
+        getUserStats()     — total entries, watch time, mean score,
+                             score distribution, genre breakdown,
+                             status breakdown, media type breakdown,
+                             activity heatmap data, monthly chart data,
+                             longest streak, completion rate
+
+  [ ] statsRoutes.js:
+        GET /api/stats/me
+        GET /api/stats/:username     (public profile only)
+
+STEP 13 — Social Features
+  [ ] Reviews + Comments (in libraryController / separate reviewController)
+  [ ] Custom lists (customListController)
+  [ ] Activity feed (read ActivityLog)
+  [ ] Notification creation + reading (notificationController)
+
+  [ ] Routes:
+        POST   /api/reviews
+        GET    /api/reviews/:type/:mediaId
+        DELETE /api/reviews/:id
+        POST   /api/comments
+        GET    /api/comments/:type/:mediaId
+        GET    /api/lists
+        POST   /api/lists
+        PUT    /api/lists/:id
+        DELETE /api/lists/:id
+        GET    /api/feed
+        GET    /api/notifications
+        PUT    /api/notifications/:id/read
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 7 — FRONTEND: FOUNDATION
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 14 — Design System & Global Styles
+  [ ] frontend/src/styles/variables.css
+        Define CSS custom properties:
+          --color-bg, --color-surface, --color-border
+          --neon-primary (#00f5ff cyan), --neon-secondary (#bf00ff purple)
+          --neon-accent (#ff00aa pink)
+          --font-main: 'Inter', sans-serif
+          --radius-md, --radius-lg
+          --shadow-neon, --shadow-card
+          --transition-smooth
+  [ ] frontend/src/styles/index.css
+        Global resets, scrollbar styling, body dark background,
+        neon glow animations, glassmorphism utility classes
+
+STEP 15 — App Shell & Routing
+  [ ] src/App.jsx — React Router v6 route definitions
+        Public routes:  /, /login, /register, /search, /media/:type/:id
+        Protected routes: /dashboard, /library, /profile/:username,
+                          /stats, /vault, /timeline/:type/:id,
+                          /settings, /lists, /list/:id
+        404 route: *
+  [ ] src/main.jsx — ReactDOM.createRoot, wrap with providers
+  [ ] AuthContext.jsx — user state, login/logout/register actions
+  [ ] ThemeContext.jsx — dark/light + accent color
+  [ ] VaultContext.jsx — vault session state, lock/unlock actions
+
+STEP 16 — Layout Components
+  [ ] Navbar.jsx    — logo, search bar, nav links, user avatar menu
+  [ ] Sidebar.jsx   — collapsible sidebar for dashboard pages
+  [ ] Footer.jsx    — links, credits
+
+STEP 17 — Service Layer (API calls)
+  [ ] src/services/api.js          — axios instance with interceptors
+  [ ] src/services/authService.js  — register, login, logout, refresh
+  [ ] src/services/libraryService.js — CRUD for library entries
+  [ ] src/services/mediaService.js   — search, detail, trending, seasonal
+  [ ] src/services/vaultService.js   — vault unlock, CRUD, timeline
+  [ ] src/services/externalApiService.js — direct calls to Jikan/TMDB/ComicK
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 8 — FRONTEND: PAGES
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 18 — Auth Pages
+  [ ] LoginPage.jsx    — email/password form, Google OAuth button, animations
+  [ ] RegisterPage.jsx — username, email, password, avatar upload
+
+STEP 19 — Home / Landing Page
+  [ ] HomePage.jsx
+        Hero section with animated neon background
+        Feature highlights
+        Trending anime + movies carousels
+        CTA to register
+
+STEP 20 — Dashboard
+  [ ] DashboardPage.jsx
+        Continue Watching/Reading section (in-progress entries)
+        Recent activity
+        Upcoming releases (from user's library)
+        Season update alerts
+
+STEP 21 — Library Page
+  [ ] LibraryPage.jsx
+        Tab bar: Anime | Manga | Manhwa | Movies | Series | etc.
+        Sub-tabs: Watching | Completed | On Hold | Dropped | Plan to Watch
+        Grid/List/Compact view toggle
+        Filter + Sort panel
+        MediaCard components with quick-edit
+
+STEP 22 — Media Detail Page
+  [ ] MediaDetailPage.jsx
+        Banner + cover image
+        Full metadata display
+        Add to library / status update widget
+        Community rating + user rating
+        Reviews section
+        Related media
+        Watch Timeline section
+
+STEP 23 — Search Page
+  [ ] SearchPage.jsx
+        Search bar (auto-search on type, debounced)
+        Type filter tabs
+        Advanced filter panel (genre, year, status, rating)
+        Results grid with MediaCard
+
+STEP 24 — Profile Page
+  [ ] ProfilePage.jsx
+        Avatar, bio, join date, follow button
+        Stats summary cards
+        Library preview (by status)
+        Activity feed
+        Custom public lists
+        Reviews written
+
+STEP 25 — Stats Page
+  [ ] StatsPage.jsx
+        Total counts (entries, episodes, chapters, watch time)
+        Score distribution bar chart
+        Status donut chart
+        Genre breakdown chart
+        Activity heatmap (GitHub style)
+        Monthly activity bar chart
+        Top genres + media type breakdown
+
+STEP 26 — Timeline Page
+  [ ] TimelinePage.jsx / TimelineView.jsx component
+        Horizontal or vertical scrollable timeline
+        Season dividers
+        "You watched up to here" marker (neon highlight)
+        New aired episodes section (highlighted differently)
+        Upcoming episodes (dimmed)
+        Episode nodes (click to mark watched)
+        "Catch me up" summary card at top
+
+STEP 27 — Vault Page
+  [ ] VaultPage.jsx — shows VaultLockScreen if locked
+  [ ] VaultLockScreen.jsx
+        Three unlock options:
+          • PIN input (6 digit keypad)
+          • OTP input + "Send OTP" button
+          • "Unlock with Fingerprint" button
+  [ ] QRBridgeModal.jsx
+        Shows generated QR code
+        Real-time status indicator (waiting → scanning → success/fail)
+        Auto-closes on success, shows fallback on failure
+  [ ] Vault library (same UI as LibraryPage but labeled Vault)
+  [ ] Vault-specific stats + timeline pages
+
+STEP 28 — Settings Page
+  [ ] SettingsPage.jsx
+        Profile settings
+        Theme / accent color picker
+        Score format, title language
+        Notification preferences
+        Vault settings (change PIN, biometric toggle, auto-lock timer)
+        Account danger zone (delete account)
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 9 — REUSABLE UI COMPONENTS
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 29 — Core UI Components
+  [ ] MediaCard.jsx      — poster, title, score, status badge, hover overlay
+  [ ] StatusBadge.jsx    — coloured pill (Watching/Completed/etc.)
+  [ ] RatingStars.jsx    — interactive 1–10 or 5-star rating input
+  [ ] ProgressBar.jsx    — ep/chapter progress bar with percentage
+  [ ] Modal.jsx          — reusable modal wrapper with backdrop
+  [ ] SearchBar.jsx      — input with debounce + loading spinner
+  [ ] ActivityHeatmap.jsx — GitHub-style calendar heatmap
+  [ ] Loader.jsx         — neon spinner / skeleton loaders
+  [ ] Toast.jsx          — react-hot-toast styled notifications
+
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 10 — POLISH, SECURITY & DEPLOYMENT
+────────────────────────────────────────────────────────────────────────────────
+
+STEP 30 — Security Hardening
+  [ ] helmet.js on all Express responses
+  [ ] Rate limiting on auth + vault endpoints
+  [ ] Vault PIN stored as bcrypt hash (never plaintext)
+  [ ] Vault QR tokens are single-use + time-expiring (60s)
+  [ ] Vault biometric tokens AES-256 encrypted
+  [ ] HTTP-only cookies for refresh tokens
+  [ ] CORS locked to frontend origin only
+  [ ] Input validation with express-validator on all routes
+
+STEP 31 — Performance
+  [ ] React Query caching for API responses
+  [ ] Debounced search (300ms delay)
+  [ ] Image lazy loading on media cards
+  [ ] Pagination / infinite scroll on library + search
+  [ ] Prisma query optimization (select only needed fields)
+
+STEP 32 — PWA Setup
+  [ ] Add vite-plugin-pwa
+  [ ] Create manifest.json (name, icons, theme_color #000000)
+  [ ] Service worker for offline library caching
+  [ ] Add to homescreen support
+
+STEP 33 — Testing
+  [ ] Backend: test auth endpoints with Postman / Thunder Client
+  [ ] Backend: test vault unlock flows (PIN, OTP, QR)
+  [ ] Frontend: manual testing of all page flows
+  [ ] Test external API integrations (Jikan, TMDB, ComicK)
+
+STEP 34 — Deployment
+  [ ] Backend → Railway / Render / Fly.io (set all env vars)
+  [ ] Frontend → Vercel / Netlify
+  [ ] Neon DB → already cloud-hosted, just use production DATABASE_URL
+  [ ] Set VITE_API_URL to deployed backend URL
+  [ ] Configure CORS for production domains
+  [ ] Set up environment variables in deployment dashboards
+
+
+================================================================================
+  EXTERNAL API QUICK REFERENCE
+================================================================================
+
+  ANIME / MANGA (Jikan — no key):
+    Base URL : https://api.jikan.moe/v4
+    Endpoints:
+      GET /anime?q={query}&limit=10
+      GET /anime/{id}/full
+      GET /anime/{id}/episodes
+      GET /seasons/now
+      GET /manga?q={query}
+      GET /manga/{id}/full
+
+  MOVIES / TV (TMDB — API key required, free):
+    Sign up  : https://www.themoviedb.org/settings/api
+    Base URL : https://api.themoviedb.org/3
+    Endpoints:
+      GET /search/multi?query={q}&api_key={key}
+      GET /movie/{id}?api_key={key}
+      GET /tv/{id}?api_key={key}
+      GET /tv/{id}/season/{n}?api_key={key}
+      GET /trending/all/week?api_key={key}
+
+  MANHWA / MANHUA (ComicK — no key):
+    Base URL : https://api.comick.io
+    Endpoints:
+      GET /v1.0/search?q={query}
+      GET /comic/{slug}
+      GET /comic/{slug}/chapters
+
+  LIGHT NOVELS (optional — MangaDex for now):
+    Base URL : https://api.mangadex.org
+    Endpoints:
+      GET /manga?title={query}&includedTags=[]
+
+
+================================================================================
+  FOLDER STRUCTURE REFERENCE
+================================================================================
+
+NeonVault/
+├── backend/
+│   ├── config/
+│   │   ├── db.js                  ← Prisma client singleton
+│   │   └── corsOptions.js         ← CORS configuration
+│   ├── controller/
+│   │   ├── authController.js
+│   │   ├── userController.js
+│   │   ├── libraryController.js
+│   │   ├── mediaController.js
+│   │   ├── searchController.js
+│   │   ├── statsController.js
+│   │   ├── timelineController.js
+│   │   └── vaultController.js
+│   ├── middleware/
+│   │   ├── authMiddleware.js      ← JWT verification
+│   │   ├── vaultMiddleware.js     ← Vault session verification
+│   │   ├── errorHandler.js        ← Global error handler
+│   │   └── rateLimiter.js         ← Rate limiting
+│   ├── prisma/
+│   │   └── schema.prisma          ← DB schema (all models)
+│   ├── routes/
+│   │   ├── authRoutes.js
+│   │   ├── userRoutes.js
+│   │   ├── libraryRoutes.js
+│   │   ├── mediaRoutes.js
+│   │   ├── searchRoutes.js
+│   │   ├── statsRoutes.js
+│   │   ├── timelineRoutes.js
+│   │   └── vaultRoutes.js
+│   ├── utils/
+│   │   ├── generateToken.js       ← JWT signing
+│   │   ├── generateOtp.js         ← OTP generator
+│   │   ├── sendEmail.js           ← nodemailer
+│   │   ├── apiHelpers.js          ← external API fetch helpers
+│   │   └── encryptVault.js        ← AES-256 vault encryption
+│   ├── .env
+│   ├── .gitignore
+│   ├── package.json
+│   └── server.js                  ← Express app entry point
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   │   ├── images/
+│   │   │   └── icons/
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   ├── Navbar.jsx
+│   │   │   │   ├── Sidebar.jsx
+│   │   │   │   └── Footer.jsx
+│   │   │   └── ui/
+│   │   │       ├── MediaCard.jsx
+│   │   │       ├── StatusBadge.jsx
+│   │   │       ├── RatingStars.jsx
+│   │   │       ├── ProgressBar.jsx
+│   │   │       ├── Modal.jsx
+│   │   │       ├── SearchBar.jsx
+│   │   │       ├── VaultLockScreen.jsx
+│   │   │       ├── QRBridgeModal.jsx
+│   │   │       ├── TimelineView.jsx
+│   │   │       ├── ActivityHeatmap.jsx
+│   │   │       ├── Loader.jsx
+│   │   │       └── Toast.jsx
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx
+│   │   │   ├── VaultContext.jsx
+│   │   │   └── ThemeContext.jsx
+│   │   ├── hooks/
+│   │   │   ├── useAuth.js
+│   │   │   ├── useVault.js
+│   │   │   ├── useLibrary.js
+│   │   │   └── useMedia.js
+│   │   ├── pages/
+│   │   │   ├── HomePage.jsx
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── RegisterPage.jsx
+│   │   │   ├── DashboardPage.jsx
+│   │   │   ├── LibraryPage.jsx
+│   │   │   ├── MediaDetailPage.jsx
+│   │   │   ├── SearchPage.jsx
+│   │   │   ├── ProfilePage.jsx
+│   │   │   ├── StatsPage.jsx
+│   │   │   ├── VaultPage.jsx
+│   │   │   ├── TimelinePage.jsx
+│   │   │   ├── SettingsPage.jsx
+│   │   │   └── NotFoundPage.jsx
+│   │   ├── services/
+│   │   │   ├── api.js
+│   │   │   ├── authService.js
+│   │   │   ├── libraryService.js
+│   │   │   ├── mediaService.js
+│   │   │   ├── vaultService.js
+│   │   │   └── externalApiService.js
+│   │   ├── styles/
+│   │   │   ├── index.css
+│   │   │   └── variables.css
+│   │   ├── utils/
+│   │   │   ├── formatters.js
+│   │   │   ├── constants.js
+│   │   │   └── helpers.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── .env
+│   ├── .gitignore
+│   └── package.json
+│
+├── FEATURES.txt
+├── IMPLEMENTATION_STEPS.txt
+└── README.md
+
+================================================================================

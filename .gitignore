@@ -1,0 +1,80 @@
+# ─────────────────────────────────────────────
+#  NeonVault — Root .gitignore
+# ─────────────────────────────────────────────
+
+# ── Dependencies (both workspaces) ────────────
+node_modules/
+**/node_modules/
+
+# ── Environment Variables ─────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+**/.env
+**/.env.local
+**/.env.production
+
+# ── Build Output ──────────────────────────────
+dist/
+build/
+out/
+**/dist/
+**/build/
+
+# ── Logs ──────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Prisma (backend) ──────────────────────────
+backend/prisma/migrations/
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/.prisma/
+
+# ── Vite Cache (frontend) ─────────────────────
+frontend/.vite/
+frontend/vite.config.js.timestamp-*
+
+# ── PWA Generated Files (frontend) ───────────
+frontend/sw.js
+frontend/workbox-*.js
+frontend/dev-dist/
+
+# ── Testing & Coverage ────────────────────────
+coverage/
+.nyc_output/
+
+# ── OS Files ──────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ──────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+
+# ── Runtime / Temp ────────────────────────────
+pids/
+*.pid
+*.pid.lock
+.cache/
+.temp/
+tmp/

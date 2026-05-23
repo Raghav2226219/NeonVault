@@ -1,0 +1,335 @@
+================================================================================
+  NEONVAULT — FEATURE LIST
+  A personal media tracking platform for anime, manga, movies, series & more
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+1. MEDIA TYPES SUPPORTED
+────────────────────────────────────────────────────────────────────────────────
+  - Anime          (TV, OVA, ONA, Movie, Special)
+  - Manga
+  - Manhwa         (Korean webcomics)
+  - Manhua         (Chinese webcomics)
+  - Movies         (Hollywood, Bollywood, World Cinema)
+  - TV Series      (Live-action, web series)
+  - Light Novels
+  - Novels / Books (optional future expansion)
+
+
+────────────────────────────────────────────────────────────────────────────────
+2. USER AUTHENTICATION & PROFILE
+────────────────────────────────────────────────────────────────────────────────
+  - Sign up / Login (email + password, Google OAuth)
+  - Unique username + avatar
+  - Profile page (bio, join date, stats summary)
+  - Private / Public profile toggle
+  - Account settings (change email, password, avatar)
+  - Delete account option
+
+
+────────────────────────────────────────────────────────────────────────────────
+3. LIBRARY & LIST MANAGEMENT
+────────────────────────────────────────────────────────────────────────────────
+  - Add any media to personal library
+  - Status labels per entry:
+      • Watching / Reading
+      • Completed
+      • On Hold
+      • Dropped
+      • Plan to Watch / Plan to Read
+  - Episode / Chapter progress tracking (current ep/ch + total)
+  - Volume tracking (for manga/manhwa/novels)
+  - Re-watch / Re-read counter
+  - Start date & finish date per entry
+  - Personal rating (1–10 scale or 5-star)
+  - Personal notes/review per entry
+  - Favourite toggle (⭐ mark)
+  - Filter library by: status, type, genre, rating, year
+  - Sort library by: title, rating, date added, progress, release year
+  - Bulk edit / bulk status change
+  - Import list (from MyAnimeList, AniList — CSV/JSON)
+  - Export list (CSV / JSON backup)
+
+
+────────────────────────────────────────────────────────────────────────────────
+4. MEDIA DETAILS PAGE
+────────────────────────────────────────────────────────────────────────────────
+  - Title (English + Native)
+  - Cover image / banner
+  - Synopsis / description
+  - Genre tags
+  - Type, Format, Status (Ongoing / Completed / Hiatus)
+  - Episode / Chapter count
+  - Release year & season
+  - Studio / Publisher / Author / Artist
+  - Community average rating
+  - Related media (sequels, prequels, spin-offs, adaptations)
+  - Characters list
+  - Trailer embed (YouTube)
+  - External links (MAL, AniList, IMDb, etc.)
+  - User's own status widget (add/update directly from detail page)
+
+
+────────────────────────────────────────────────────────────────────────────────
+5. SEARCH & DISCOVERY
+────────────────────────────────────────────────────────────────────────────────
+  - Global search bar (search across all media types at once)
+  - Filter search by: type, genre, year, status, rating, format
+  - Sort search results by: relevance, popularity, rating, newest
+  - Advanced search / filter panel
+  - "Browse by Genre" pages
+  - Trending section (top airing anime, trending manhwa, etc.)
+  - New Releases feed
+  - Popular All-Time lists per media type
+  - Staff / Author search (find all works by a creator)
+
+
+────────────────────────────────────────────────────────────────────────────────
+6. DASHBOARD & HOMEPAGE
+────────────────────────────────────────────────────────────────────────────────
+  - Personalized dashboard after login
+  - "Continue Watching / Reading" quick-access section
+  - Recently updated entries in user's library
+  - "Up Next" — next episode/chapter tracker
+  - Activity feed (own recent activity)
+  - Spotlight / featured media banner
+  - Seasonal anime calendar (current season)
+  - Recommendation cards ("You might like...")
+
+
+────────────────────────────────────────────────────────────────────────────────
+7. STATISTICS & ANALYTICS
+────────────────────────────────────────────────────────────────────────────────
+  - Total entries tracked (per media type)
+  - Total episodes watched / chapters read
+  - Total watch time (calculated in hours/days)
+  - Mean score across library
+  - Score distribution chart (bar graph)
+  - Status breakdown chart (pie/donut)
+  - Media type breakdown
+  - Top genres consumed
+  - Activity heatmap (GitHub-style — days with activity)
+  - Monthly activity chart
+  - Completion rate stats
+  - Longest streak tracking
+
+
+────────────────────────────────────────────────────────────────────────────────
+8. RECOMMENDATIONS
+────────────────────────────────────────────────────────────────────────────────
+  - AI/algorithm-based recommendations from completed entries
+  - "Because you liked X..." style suggestions
+  - Genre-based recommendations
+  - Community-sourced recommendation lists
+  - "Hidden gems" — highly rated but less popular entries
+  - Similar media on each detail page
+
+
+────────────────────────────────────────────────────────────────────────────────
+9. CUSTOM LISTS
+────────────────────────────────────────────────────────────────────────────────
+  - Create unlimited named custom lists (e.g., "Best Isekai", "Rainy Day Movies")
+  - Add any media to any custom list
+  - Set list as Public or Private
+  - Add description to lists
+  - Share custom lists via link
+  - Browse other users' public lists
+
+
+────────────────────────────────────────────────────────────────────────────────
+10. SOCIAL & COMMUNITY FEATURES
+────────────────────────────────────────────────────────────────────────────────
+  - Follow other users
+  - View followed users' activity feed
+  - Like / React to activity entries
+  - Comment on media entries (global community comments)
+  - Review system (full text review + rating, per media)
+  - Upvote / Downvote reviews
+  - Spoiler tag support in reviews/comments
+  - Report system (flag inappropriate content)
+
+
+────────────────────────────────────────────────────────────────────────────────
+11. NOTIFICATIONS
+────────────────────────────────────────────────────────────────────────────────
+  - New episode / chapter release alerts (for entries in library)
+  - Notification when followed user adds something
+  - Like / comment notifications
+  - Weekly digest email (optional)
+  - In-app notification centre
+
+
+────────────────────────────────────────────────────────────────────────────────
+12. CALENDAR & SCHEDULE
+────────────────────────────────────────────────────────────────────────────────
+  - Seasonal anime airing calendar (current & upcoming seasons)
+  - "Airing soon" countdown per tracked anime
+  - Manga / manhwa release schedule tracker
+  - Personal calendar view (upcoming releases from user's list)
+
+
+────────────────────────────────────────────────────────────────────────────────
+13. SETTINGS & CUSTOMIZATION
+────────────────────────────────────────────────────────────────────────────────
+  - Dark mode / Light mode toggle (default: dark)
+  - Accent color picker (neon theme options)
+  - List layout options: Grid view / List view / Compact view
+  - Score format preference (10-point, 5-star, percentage)
+  - Title language preference (English / Japanese / Romaji)
+  - Notification preferences (per type)
+  - Content filtering (hide adult content toggle)
+  - Timezone setting
+
+
+────────────────────────────────────────────────────────────────────────────────
+14. PWA & PERFORMANCE
+────────────────────────────────────────────────────────────────────────────────
+  - Progressive Web App (installable on phone/desktop)
+  - Offline access to personal library (cached data)
+  - Fast search with instant results
+  - Lazy loading for images and lists
+  - Responsive design (mobile-first)
+
+
+────────────────────────────────────────────────────────────────────────────────
+15. ADMIN / MODERATION (FUTURE / INTERNAL)
+────────────────────────────────────────────────────────────────────────────────
+  - Admin panel for managing media database
+  - Add / edit / delete media entries
+  - Approve user-submitted corrections
+  - User ban / report management
+  - Site analytics dashboard
+
+
+────────────────────────────────────────────────────────────────────────────────
+16. SEASON CONTINUATION & WATCH TIMELINE
+────────────────────────────────────────────────────────────────────────────────
+  - Automatic new season detection for any completed/watched entry in library
+  - Push / in-app notification when a new season is officially announced or begins
+    airing for something the user has watched before
+  - Countdown timer to new season premiere date
+  - "Upcoming Season" badge on library cards for relevant entries
+
+  TIMELINE VIEW (per series):
+  - Visual chronological timeline on each multi-season series page
+  - Timeline shows:
+      • Every episode the user has watched (with watch date if available)
+      • Clear season dividers / labels (Season 1, Season 2, etc.)
+      • "You watched up to here" marker at the user's last watched episode
+      • New episodes / seasons that have aired since the user last watched
+      • Future / upcoming episodes with expected air dates
+      • Gap indicator — shows how long it has been since the user last watched
+  - Colour coding on the timeline:
+      • Watched episodes     → filled / solid (e.g. neon accent colour)
+      • Unwatched but aired  → outlined / hollow
+      • Upcoming / scheduled → dimmed with date label
+  - Quick-update button on the timeline to mark episodes watched in one click
+  - "Catch me up" summary — brief text showing what the user missed since they
+    last watched (episode count, season count, time gap)
+  - Timeline accessible from both the media detail page and the user's library
+
+
+────────────────────────────────────────────────────────────────────────────────
+17. PRIVATE VAULT
+────────────────────────────────────────────────────────────────────────────────
+  A fully isolated, encrypted section of the user's library for media they want
+  to keep completely hidden from their public profile, activity feed, stats,
+  followers, and even normal app views. The vault is locked by default and must
+  be explicitly unlocked each session.
+
+  WHAT THE VAULT STORES:
+  - A separate hidden library (same media types: anime, manga, movies, etc.)
+  - Vault entries NEVER appear in:
+      • Public profile / profile stats
+      • Activity feed (own or others')
+      • Global statistics & analytics
+      • Custom lists (unless vault list)
+      • Search suggestions or recommendations shown to others
+  - Vault has its own independent stats page (watch time, ratings, etc.)
+  - Vault has its own Season Continuation & Watch Timeline (fully separate)
+
+  AUTHENTICATION — THREE UNLOCK METHODS:
+
+  1. VAULT PIN
+     - Separate 6-digit PIN, completely different from account login PIN
+     - Set during vault first-time setup
+     - Wrong PIN ×5 → vault locks for a cooldown period (e.g. 15 minutes)
+     - PIN can be changed only after successful vault unlock
+
+  2. VAULT OTP
+     - One-time password sent to registered email or authenticator app
+     - Completely separate OTP flow from the main account login OTP
+     - Used as a fallback if PIN is forgotten or biometric fails
+     - OTP expires in 5 minutes
+
+  3. BIOMETRIC UNLOCK (via Mobile QR Bridge)
+     - Designed for desktop sessions where the browser has no biometric access
+     - Flow:
+         Step 1 → User clicks "Unlock with Fingerprint" on desktop
+         Step 2 → A unique time-limited QR code is displayed on screen
+                  (expires in 60 seconds, single-use)
+         Step 3 → User scans QR code with NeonVault mobile app
+         Step 4 → Mobile app prompts fingerprint / Face ID scan
+         Step 5a → If biometric SUCCEEDS:
+                     Mobile sends a signed token to the server
+                     Desktop session receives unlock confirmation in real-time
+                     Vault is unlocked on desktop
+         Step 5b → If biometric FAILS (×3 attempts):
+                     Mobile shows failure message
+                     Desktop falls back to Vault PIN or Vault OTP prompt
+     - Biometric bridge uses a short-lived encrypted token (never stores biometric data)
+     - QR code is single-use and invalidated immediately after scan
+     - Each vault unlock session has a timeout (auto-locks after inactivity)
+
+  VAULT SESSION MANAGEMENT:
+  - Auto-lock after configurable inactivity timeout (5 / 15 / 30 min or manual)
+  - "Lock Vault Now" button always visible when vault is open
+  - Vault locked/unlocked status is never exposed to other users or logs
+  - Failed unlock attempts silently logged (visible only inside vault settings)
+  - Vault can be fully wiped/reset via email confirmation (emergency reset)
+
+  VAULT SETTINGS (accessible inside vault only):
+  - Change Vault PIN
+  - Enable / Disable biometric unlock
+  - Set inactivity auto-lock timer
+  - View failed unlock attempt log
+  - Export vault data (encrypted backup)
+  - Emergency vault reset (sends confirmation email to registered address)
+
+
+================================================================================
+  PRIORITY ORDER (Build Phases)
+================================================================================
+
+  PHASE 1 — Core MVP
+    • Auth (login/signup)
+    • Library management (add, status, progress, rating)
+    • Media detail pages
+    • Basic search & browse
+    • User dashboard
+
+  PHASE 2 — Stats & Discovery
+    • Statistics / analytics page
+    • Advanced filters & sorting
+    • Custom lists
+    • Recommendations (basic genre-matching)
+    • Seasonal calendar
+
+  PHASE 3 — Social & Polish
+    • Follow system & activity feed
+    • Reviews & comments
+    • Notifications
+    • Season continuation alerts & Watch Timeline
+    • Import / Export
+    • PWA support
+
+  PHASE 4 — Advanced
+    • AI-based recommendations
+    • Private Vault (PIN + OTP + Biometric QR Bridge unlock)
+    • Vault separate library, stats & timeline
+    • Admin panel & user submissions
+    • Full mobile optimization
+    • Email digest & push notifications
+
+================================================================================
